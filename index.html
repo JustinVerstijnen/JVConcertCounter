@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mijn Concerten</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="0b9a2780-4e9b-4e14-93d9-97d0e64d6ccb"></script>
+</head>
+<body>
+  <header>
+    <h1>🔥 Mijn Concerten 🎸</h1>
+    <h2>Een inkijkje in mijn geplande en bezochte concerten</h2>
+  </header>
+
+  <main>
+    <section id="upcoming">
+      <h1>Komende concerten</h1>
+      <p>Deze concerten staan de komende periode op de planning:</p>
+      <div id="upcoming-list"></div>
+    </section>
+
+    <section id="overview-actions" class="overview-actions">
+      <h2 class="archive-toggle toggle-button">
+        <span class="archive-arrow arrow">▼</span> Archief
+      </h2>
+
+      <h2 class="stats-toggle toggle-button stats-button">
+        <span class="stats-arrow arrow">▼</span> Statistieken
+      </h2>
+    </section>
+
+    <section id="archive">
+      <div id="archive-list" class="collapsible-panel"></div>
+    </section>
+
+    <section id="statistics">
+      <div id="stats-list" class="collapsible-panel"></div>
+    </section>
+  </main>
+
+  <script src="concerts-data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
