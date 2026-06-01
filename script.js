@@ -101,6 +101,17 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
+function getSafeUrl(value) {
+  if (!value || typeof value !== "string") return "";
+
+  try {
+    const url = new URL(value.trim());
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
 function diffYMDDays(target, now) {
   let years = now.getFullYear() - target.getFullYear();
   let months = now.getMonth() - target.getMonth();
@@ -685,16 +696,28 @@ function createConcertCard(concert, isPast) {
   card.classList.add("concert-card");
   card.dataset.datetime = concert.datetime;
 
+  const setlistUrl = isPast ? getSafeUrl(concert.setlistUrl) : "";
+  const setlistButton = setlistUrl
+    ? `
+      <a class="setlist-button" href="${escapeHtml(setlistUrl)}" target="_blank" rel="noopener noreferrer" title="Bekijk setlist op Setlist.fm" aria-label="Bekijk setlist van ${escapeHtml(concert.artist)} op Setlist.fm">
+        <img class="setlist-logo" src="setlistfm-logo.png" alt="Setlist.fm" loading="lazy">
+      </a>
+    `
+    : "";
+
   card.innerHTML = `
     <div class="info">
-      <div>
+      <div class="concert-main">
         <div class="details">
           <h3>${escapeHtml(concert.artist)}</h3>
           <p>${escapeHtml(concert.location)}</p>
         </div>
         <div class="date">${formatDate(concert.datetime)}</div>
       </div>
-      <div class="countdown"></div>
+      <div class="concert-side">
+        ${setlistButton}
+        <div class="countdown"></div>
+      </div>
     </div>
   `;
 
