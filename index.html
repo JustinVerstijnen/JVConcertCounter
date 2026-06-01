@@ -2,44 +2,92 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="Een overzicht van geplande en bezochte concerten, inclusief archief, setlists en persoonlijke statistieken.">
   <title>Mijn Concerten</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="preload" href="assets/background.jpg" as="image">
+  <link rel="stylesheet" href="assets/style.css">
   <script defer src="https://cloud.umami.is/script.js" data-website-id="0b9a2780-4e9b-4e14-93d9-97d0e64d6ccb"></script>
 </head>
 <body>
-  <header>
-    <h1>🔥 Mijn Concerten 🎸</h1>
-    <h2>Een inkijkje in mijn geplande en bezochte concerten</h2>
+  <a class="skip-link" href="#content">Naar concerten</a>
+
+  <header class="site-hero">
+    <div class="hero-backdrop" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">Live muziek · herinneringen · planning</p>
+        <h1>Mijn Concerten</h1>
+        <p class="hero-subtitle">Een strak overzicht van geplande shows, bezochte concerten, setlists en persoonlijke statistieken.</p>
+      </div>
+
+      <div id="hero-stats" class="hero-stats" aria-live="polite"></div>
+    </div>
   </header>
 
-  <main>
-    <section id="upcoming">
-      <h1>Komende concerten</h1>
-      <p>Deze concerten staan de komende periode op de planning:</p>
-      <div id="upcoming-list"></div>
+  <main id="content" class="page-shell">
+    <section id="next-highlight" class="next-highlight" aria-live="polite"></section>
+
+    <section class="control-panel" aria-label="Concerten filteren en sorteren">
+      <div class="control-field search-field">
+        <label for="concert-search">Zoeken</label>
+        <input id="concert-search" type="search" placeholder="Zoek op artiest of locatie..." autocomplete="off">
+      </div>
+
+      <div class="control-field">
+        <label for="concert-filter">Weergave</label>
+        <select id="concert-filter">
+          <option value="all">Alles</option>
+          <option value="upcoming">Komend</option>
+          <option value="past">Archief</option>
+          <option value="setlists">Met setlist</option>
+        </select>
+      </div>
+
+      <div class="control-field">
+        <label for="concert-sort">Sortering</label>
+        <select id="concert-sort">
+          <option value="smart">Slimme sortering</option>
+          <option value="newest">Nieuwste eerst</option>
+          <option value="oldest">Oudste eerst</option>
+          <option value="artist">Artiest A-Z</option>
+        </select>
+      </div>
+    </section>
+
+    <section id="upcoming" class="content-section">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Planning</p>
+          <h2>Komende concerten</h2>
+        </div>
+        <p>Deze concerten staan de komende periode op de planning.</p>
+      </div>
+      <div id="upcoming-list" class="concert-list"></div>
     </section>
 
     <section id="overview-actions" class="overview-actions">
-      <h2 class="archive-toggle toggle-button">
-        <span class="archive-arrow arrow">▼</span> Archief
-      </h2>
+      <button type="button" class="archive-toggle toggle-button" aria-expanded="false" aria-controls="archive-list">
+        <span class="archive-arrow arrow" aria-hidden="true">▼</span>
+        <span>Archief</span>
+      </button>
 
-      <h2 class="stats-toggle toggle-button stats-button">
-        <span class="stats-arrow arrow">▼</span> Statistieken
-      </h2>
+      <button type="button" class="stats-toggle toggle-button stats-button" aria-expanded="false" aria-controls="stats-list">
+        <span class="stats-arrow arrow" aria-hidden="true">▼</span>
+        <span>Statistieken</span>
+      </button>
     </section>
 
-    <section id="archive">
-      <div id="archive-list" class="collapsible-panel"></div>
+    <section id="archive" class="content-section archive-section">
+      <div id="archive-list" class="concert-list collapsible-panel"></div>
     </section>
 
-    <section id="statistics">
+    <section id="statistics" class="content-section statistics-section">
       <div id="stats-list" class="collapsible-panel"></div>
     </section>
   </main>
 
-  <script src="concerts-data.js"></script>
-  <script src="script.js"></script>
+  <script src="assets/script.js"></script>
 </body>
 </html>
