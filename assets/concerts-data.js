@@ -1,0 +1,464 @@
+window.CONCERTS_DATA = [
+  {
+    "artist": "Guns N' Roses",
+    "location": "Goffertpark - Nijmegen",
+    "datetime": "2017-07-12T19:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/guns-n-roses/2017/goffertpark-nijmegen-netherlands-53e46fd1.html"
+  },
+  {
+    "artist": "Toto",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2018-03-17T20:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/toto/2018/ziggo-dome-amsterdam-netherlands-53efcfb1.html"
+  },
+  {
+    "artist": "Guus Meeuwis",
+    "location": "Philips Stadion - Eindhoven",
+    "datetime": "2018-06-09T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/guus-meeuwis/2018/philips-stadion-eindhoven-netherlands-3ead13b.html"
+  },
+  {
+    "artist": "Guns N' Roses",
+    "location": "Goffertpark - Nijmegen",
+    "datetime": "2018-07-04T19:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/guns-n-roses/2018/goffertpark-nijmegen-netherlands-73ea7651.html"
+  },
+  {
+    "artist": "Europe",
+    "location": "013 - Tilburg",
+    "datetime": "2018-09-26T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/europe/2018/poppodium-013-tilburg-netherlands-33e938cd.html"
+  },
+  {
+    "artist": "Kensington",
+    "location": "Ijsselhallen - Zwolle",
+    "datetime": "2018-11-10T22:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/kensington/2018/ijsselhallen-zwolle-netherlands-33979c69.html"
+  },
+  {
+    "artist": "Slash & Myles Kennedy",
+    "location": "AFAS Live - Amsterdam",
+    "datetime": "2019-02-24T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/slash-featuring-myles-kennedy-and-the-conspirators/2019/afas-live-amsterdam-netherlands-7b92a6b4.html"
+  },
+  {
+    "artist": "Steel Panther",
+    "location": "Tivoli Vredenburg - Utrecht",
+    "datetime": "2020-02-02T20:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/steel-panther/2020/tivolivredenburg-ronda-utrecht-netherlands-1b98f948.html"
+  },
+  {
+    "artist": "The Dire Straits Experience",
+    "location": "Music Club - Kampen",
+    "datetime": "2019-05-18T21:00:00",
+    "setlistUrl": ""
+  },
+  {
+    "artist": "Metallica",
+    "location": "Johan Cruijff Arena - Amsterdam",
+    "datetime": "2019-06-11T20:45:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/metallica/2019/johan-cruijff-arena-amsterdam-netherlands-7391fe4d.html"
+  },
+  {
+    "artist": "Bon Jovi",
+    "location": "Goffertpark - Nijmegen",
+    "datetime": "2019-06-13T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/bon-jovi/2019/goffertpark-nijmegen-netherlands-6b91ee0e.html"
+  },
+  {
+    "artist": "Guus Meeuwis",
+    "location": "Philips Stadion - Eindhoven",
+    "datetime": "2019-06-15T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/guus-meeuwis/2019/philips-stadion-eindhoven-netherlands-5b91d364.html"
+  },
+  {
+    "artist": "Rammstein",
+    "location": "De Kuip - Rotterdam",
+    "datetime": "2019-06-25T20:45:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/rammstein/2019/feijenoord-stadion-rotterdam-netherlands-39111d7.html"
+  },
+  {
+    "artist": "Live",
+    "location": "Paradiso - Amsterdam",
+    "datetime": "2019-07-02T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/live/2019/paradiso-grote-zaal-amsterdam-netherlands-2b91587e.html"
+  },
+  {
+    "artist": "Alter Bridge",
+    "location": "AFAS Live - Amsterdam",
+    "datetime": "2019-12-10T20:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/alter-bridge/2019/afas-live-amsterdam-netherlands-7b9a5610.html"
+  },
+  {
+    "artist": "A-ha",
+    "location": "AFAS Live - Amsterdam",
+    "datetime": "2022-05-04T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/aha/2022/afas-live-amsterdam-netherlands-5bb79724.html"
+  },
+  {
+    "artist": "Red Hot Chili Peppers",
+    "location": "Goffertpark - Nijmegen",
+    "datetime": "2022-06-10T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/red-hot-chili-peppers/2022/goffertpark-nijmegen-netherlands-2bb434b2.html"
+  },
+  {
+    "artist": "Europe",
+    "location": "Hello Festival - Emmen",
+    "datetime": "2022-06-11T22:45:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/europe/2022/de-grote-rietplas-emmen-netherlands-3bb410a8.html"
+  },
+  {
+    "artist": "Metallica",
+    "location": "Pinkpop Festival - Landgraaf",
+    "datetime": "2022-06-17T22:15:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/metallica/2022/megaland-landgraaf-netherlands-6bb46e8a.html"
+  },
+  {
+    "artist": "Guns N' Roses",
+    "location": "Stadspark - Groningen",
+    "datetime": "2022-06-23T19:45:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/guns-n-roses/2022/stadspark-groningen-netherlands-73b5b27d.html"
+  },
+  {
+    "artist": "Iron Maiden",
+    "location": "Gelredome - Arnhem",
+    "datetime": "2022-06-27T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/iron-maiden/2022/gelredome-arnhem-netherlands-73b58ac9.html"
+  },
+  {
+    "artist": "Rammstein",
+    "location": "Goffertpark - Nijmegen",
+    "datetime": "2022-07-04T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/rammstein/2022/goffertpark-nijmegen-netherlands-33b53c1d.html"
+  },
+  {
+    "artist": "Rammstein",
+    "location": "Goffertpark - Nijmegen",
+    "datetime": "2022-07-05T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/rammstein/2022/goffertpark-nijmegen-netherlands-4bb53786.html"
+  },
+  {
+    "artist": "The Killers",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2022-07-16T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/the-killers/2022/ziggo-dome-amsterdam-netherlands-23b2b0e3.html"
+  },
+  {
+    "artist": "KISS",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2022-07-21T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/kiss/2022/ziggo-dome-amsterdam-netherlands-bb2f54e.html"
+  },
+  {
+    "artist": "Bryan Adams",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2022-11-23T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/bryan-adams/2022/ziggo-dome-amsterdam-netherlands-63bff2a7.html"
+  },
+  {
+    "artist": "Within Temptation",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2022-11-30T20:15:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/within-temptation/2022/ziggo-dome-amsterdam-netherlands-6bbf2a72.html"
+  },
+  {
+    "artist": "Evanescence",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2022-11-30T21:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/evanescence/2022/ziggo-dome-amsterdam-netherlands-7bbf2a7c.html"
+  },
+  {
+    "artist": "Volbeat",
+    "location": "Gelredome - Arnhem",
+    "datetime": "2022-12-09T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/volbeat/2022/gelredome-arnhem-netherlands-33bf5485.html"
+  },
+  {
+    "artist": "Roger Waters",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2023-04-04T20:15:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/roger-waters/2023/ziggo-dome-amsterdam-netherlands-13bb71f1.html"
+  },
+  {
+    "artist": "Avril Lavigne",
+    "location": "AFAS Live - Amsterdam",
+    "datetime": "2023-04-14T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/avril-lavigne/2023/afas-live-amsterdam-netherlands-bb891fa.html"
+  },
+  {
+    "artist": "Metallica",
+    "location": "Johan Cruijff Arena - Amsterdam",
+    "datetime": "2023-04-29T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/metallica/2023/johan-cruijff-arena-amsterdam-netherlands-23b87c3f.html"
+  },
+  {
+    "artist": "Sabaton",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2023-05-03T21:15:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/sabaton/2023/ziggo-dome-amsterdam-netherlands-13b85de9.html"
+  },
+  {
+    "artist": "Normaal",
+    "location": "Tractorpullingterrein - Lochem",
+    "datetime": "2023-05-18T19:45:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/normaal/2023/tracktorpulling-terrein-brinkerinkweg-lochem-netherlands-1bb9d150.html"
+  },
+  {
+    "artist": "The Offspring",
+    "location": "AFAS Live - Amsterdam",
+    "datetime": "2023-05-20T21:15:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/the-offspring/2023/afas-live-amsterdam-netherlands-7bb9c614.html"
+  },
+  {
+    "artist": "Def Leppard",
+    "location": "SparkassenPark - Mönchengladbach",
+    "datetime": "2023-05-25T18:45:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/def-leppard/2023/sparkassenpark-monchengladbach-germany-3b9152b.html"
+  },
+  {
+    "artist": "Motley Crue",
+    "location": "SparkassenPark - Mönchengladbach",
+    "datetime": "2023-05-25T20:45:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/motley-crue/2023/sparkassenpark-monchengladbach-germany-1bb9153c.html"
+  },
+  {
+    "artist": "Ghost",
+    "location": "AFAS Live - Amsterdam",
+    "datetime": "2023-06-04T21:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/ghost/2023/afas-live-amsterdam-netherlands-ba6b136.html"
+  },
+  {
+    "artist": "KISS",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2023-06-12T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/kiss/2023/ziggo-dome-amsterdam-netherlands-63a6de5b.html"
+  },
+  {
+    "artist": "Rammstein",
+    "location": "Stadspark - Groningen",
+    "datetime": "2023-07-06T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/rammstein/2023/stadspark-groningen-netherlands-1ba7dde4.html"
+  },
+  {
+    "artist": "Guns N' Roses",
+    "location": "Bospop terrein - Weert",
+    "datetime": "2023-07-11T19:45:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/guns-n-roses/2023/festivalterrein-weert-noord-weert-netherlands-43a723b7.html"
+  },
+  {
+    "artist": "Queens of the Stone Age",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2023-11-04T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/queens-of-the-stone-age/2023/ziggo-dome-amsterdam-netherlands-3a1b1ff.html"
+  },
+  {
+    "artist": "Slash & Myles Kennedy",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2024-04-09T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/slash-featuring-myles-kennedy-and-the-conspirators/2024/ziggo-dome-amsterdam-netherlands-3abd54b.html"
+  },
+  {
+    "artist": "The Tribute: Battle of the Bands",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2024-04-12T20:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/the-fortunate-sons/2024/ziggo-dome-amsterdam-netherlands-2ba8b0da.html"
+  },
+  {
+    "artist": "De Toppers",
+    "location": "Johan Cruijff Arena - Amsterdam",
+    "datetime": "2024-05-24T20:45:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/de-toppers/2024/johan-cruijff-arena-amsterdam-netherlands-135679fd.html"
+  },
+  {
+    "artist": "AC/DC",
+    "location": "Johan Cruijff Arena - Amsterdam",
+    "datetime": "2024-06-05T20:45:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/acdc/2024/johan-cruijff-arena-amsterdam-netherlands-23abf0b3.html"
+  },
+  {
+    "artist": "Judas Priest",
+    "location": "AFAS Live - Amsterdam",
+    "datetime": "2024-06-10T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/judas-priest/2024/afas-live-amsterdam-netherlands-bab9942.html"
+  },
+  {
+    "artist": "Scorpions",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2024-06-11T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/scorpions/2024/ziggo-dome-amsterdam-netherlands-2b5650ae.html"
+  },
+  {
+    "artist": "Eagles",
+    "location": "Gelredome - Arnhem",
+    "datetime": "2024-06-13T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/eagles/2024/gelredome-arnhem-netherlands-7babba80.html"
+  },
+  {
+    "artist": "Guus Meeuwis",
+    "location": "Philips Stadion - Eindhoven",
+    "datetime": "2024-06-16T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/guus-meeuwis/2024/philips-stadion-eindhoven-netherlands-63a97eaf.html"
+  },
+  {
+    "artist": "Rammstein",
+    "location": "Goffertpark - Nijmegen",
+    "datetime": "2024-06-18T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/rammstein/2024/goffertpark-nijmegen-netherlands-73ab864d.html"
+  },
+  {
+    "artist": "Green Day",
+    "location": "Gelredome - Arnhem",
+    "datetime": "2024-06-19T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/green-day/2024/gelredome-arnhem-netherlands-13abb585.html"
+  },
+  {
+    "artist": "Steel Panther",
+    "location": "Oosterpoort - Groningen",
+    "datetime": "2024-06-23T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/steel-panther/2024/de-oosterpoort-grote-zaal-groningen-netherlands-1b573dac.html"
+  },
+  {
+    "artist": "Avenged Sevenfold",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2024-06-24T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/avenged-sevenfold/2024/ziggo-dome-amsterdam-netherlands-33ab9831.html"
+  },
+  {
+    "artist": "Bruce Springsteen",
+    "location": "Goffertpark - Nijmegen",
+    "datetime": "2024-06-27T20:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/bruce-springsteen/2024/goffertpark-nijmegen-netherlands-babbd0e.html"
+  },
+  {
+    "artist": "Deep Purple",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2024-10-29T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/deep-purple/2024/ziggo-dome-amsterdam-netherlands-5ba833fc.html"
+  },
+  {
+    "artist": "Queen Must Go On",
+    "location": "Ahoy - Rotterdam",
+    "datetime": "2024-11-24T20:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/queen-must-go-on/2024/ahoy-rotterdam-netherlands-4b5e5702.html"
+  },
+  {
+    "artist": "Within Temptation",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2024-12-06T21:15:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/within-temptation/2024/ziggo-dome-amsterdam-netherlands-bab751e.html"
+  },
+  {
+    "artist": "Toto",
+    "location": "Gelredome - Arnhem",
+    "datetime": "2025-02-08T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/toto/2025/gelredome-arnhem-netherlands-1b5ed138.html"
+  },
+  {
+    "artist": "Ghost",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2025-05-08T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/ghost/2025/ziggo-dome-amsterdam-netherlands-2b51d83e.html"
+  },
+  {
+    "artist": "Normaal",
+    "location": "Tractorpullingterrein - Lochem",
+    "datetime": "2025-05-29T20:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/normaal/2025/tracktorpulling-terrein-brinkerinkweg-lochem-netherlands-235110a3.html"
+  },
+  {
+    "artist": "John Fogerty",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2025-06-23T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/john-fogerty/2025/ziggo-dome-amsterdam-netherlands-4b5b3ffa.html"
+  },
+  {
+    "artist": "Linkin Park",
+    "location": "Gelredome - Arnhem",
+    "datetime": "2025-06-26T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/linkin-park/2025/gelredome-arnhem-netherlands-135ef1c9.html"
+  },
+  {
+    "artist": "Green Day",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2025-07-02T20:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/green-day/2025/ziggo-dome-amsterdam-netherlands-3b504490.html"
+  },
+  {
+    "artist": "DragonForce",
+    "location": "Tivoli Vredenburg - Utrecht",
+    "datetime": "2025-07-06T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/dragonforce/2025/tivolivredenburg-ronda-utrecht-netherlands-4b5b2bae.html"
+  },
+  {
+    "artist": "Iron Maiden",
+    "location": "Gelredome - Arnhem",
+    "datetime": "2025-07-23T21:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/iron-maiden/2025/gelredome-arnhem-netherlands-1b53d938.html"
+  },
+  {
+    "artist": "Alice Cooper",
+    "location": "AFAS Live - Amsterdam",
+    "datetime": "2025-07-28T20:15:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/alice-cooper/2025/afas-live-amsterdam-netherlands-6b465256.html"
+  },
+  {
+    "artist": "The Offspring",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2025-11-07T19:30:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/the-offspring/2025/ziggo-dome-amsterdam-netherlands-23502457.html"
+  },
+  {
+    "artist": "Sabaton",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2025-12-01T19:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/sabaton/2025/ziggo-dome-amsterdam-netherlands-135e8d19.html"
+  },
+  {
+    "artist": "Avond van de Filmmuziek",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2025-12-21T14:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/metropole-orkest/2025/ziggo-dome-amsterdam-netherlands-334c085d.html"
+  },
+  {
+    "artist": "Metallica",
+    "location": "Deutsche Bank Park - Frankfurt",
+    "datetime": "2026-05-22T20:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/metallica/2026/deutsche-bank-park-frankfurt-germany-7b473664.html"
+  },
+  {
+    "artist": "Metallica",
+    "location": "Deutsche Bank Park - Frankfurt",
+    "datetime": "2026-05-24T20:00:00",
+    "setlistUrl": "https://www.setlist.fm/setlist/metallica/2026/deutsche-bank-park-frankfurt-germany-6347365f.html"
+  },
+  {
+    "artist": "Iron Maiden",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2026-06-10T20:00:00",
+    "setlistUrl": ""
+  },
+  {
+    "artist": "Foreigner",
+    "location": "Hello Festival - Emmen",
+    "datetime": "2026-06-13T20:00:00",
+    "setlistUrl": ""
+  },
+  {
+    "artist": "Roxette",
+    "location": "Hello Festival - Emmen",
+    "datetime": "2026-06-13T22:00:00",
+    "setlistUrl": ""
+  },
+  {
+    "artist": "Guns N' Roses",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2026-06-18T20:00:00",
+    "setlistUrl": ""
+  },
+  {
+    "artist": "Guns N' Roses",
+    "location": "Ziggo Dome - Amsterdam",
+    "datetime": "2026-06-20T20:00:00",
+    "setlistUrl": ""
+  }
+];

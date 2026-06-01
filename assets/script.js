@@ -1,23 +1,18 @@
 // =========================================================
-// CONFIGURATIE
+// INSTELLINGEN
 // =========================================================
 
 let concerts = [];
 let countdownTimer = null;
 
-const appState = {
-  search: "",
-  filter: "all",
-  sort: "smart",
-  archiveExpanded: false,
-  statsExpanded: false
-};
-
+// Afstanden worden intern berekend vanaf een algemene referentieplaats.
 const HOME_LOCATION = {
   lat: 52.5168,
   lon: 6.0830
 };
 
+// Vaste plaatscoördinaten zodat concerts.json niet aangepast hoeft te worden.
+// De plaats wordt uit "Locatie - Plaats" gehaald.
 const CITY_COORDS = {
   "Amsterdam": { lat: 52.3676, lon: 4.9041 },
   "Arnhem": { lat: 51.9851, lon: 5.8987 },
@@ -38,61 +33,60 @@ const CITY_COORDS = {
 };
 
 // =========================================================
-// DATA LADEN
+// LOAD JSON
 // =========================================================
 
 async function loadConcerts() {
   try {
-    const response = await fetch("concerts.json", { cache: "no-store" });
+    concerts = await getConcertsData();
 
-    if (!response.ok) {
-      throw new Error(`concerts.json kon niet worden geladen. Status: ${response.status}`);
+    if (!Array.isArray(concerts)) {
+      throw new Error("concertdata bevat geen geldige array.");
     }
 
-    const data = await response.json();
-
-    if (!Array.isArray(data)) {
-      throw new Error("concerts.json bevat geen geldige array.");
-    }
-
-    concerts = data.map(normalizeConcert).filter(Boolean);
-    setupControls();
     renderConcerts();
   } catch (err) {
-    console.error("Concertdata kon niet worden geladen:", err);
+    console.error("Cannot load concerts data:", err);
     showLoadError(err);
   }
 }
 
-function normalizeConcert(concert) {
-  if (!concert || !concert.artist || !concert.location || !concert.datetime) return null;
+async function getConcertsData() {
+  try {
+    const response = await fetch("concerts.json", { cache: "no-store" });
 
-  return {
-    artist: String(concert.artist),
-    location: String(concert.location),
-    datetime: String(concert.datetime),
-    setlistUrl: typeof concert.setlistUrl === "string" ? concert.setlistUrl : ""
-  };
+    if (!response.ok) {
+      throw new Error("concerts.json kon niet worden geladen. Status: " + response.status);
+    }
+
+    return await response.json();
+  } catch (fetchError) {
+    // Als je index.html lokaal opent via file:// blokkeert de browser vaak fetch().
+    // Dan gebruiken we de fallback uit concerts-data.js.
+    if (Array.isArray(window.CONCERTS_DATA)) {
+      console.warn("Fetch van concerts.json is mislukt. Fallback uit concerts-data.js wordt gebruikt.", fetchError);
+      return window.CONCERTS_DATA;
+    }
+
+    throw fetchError;
+  }
 }
 
 function showLoadError(err) {
   const upcomingList = document.getElementById("upcoming-list");
-  const heroStats = document.getElementById("hero-stats");
-
-  if (heroStats) {
-    heroStats.innerHTML = createHeroStat("Status", "Fout", "Data niet geladen");
-  }
-
   if (!upcomingList) return;
 
   upcomingList.innerHTML = `
-    <div class="empty-state danger">
-      <h3>Concerten konden niet worden geladen</h3>
-      <p>${escapeHtml(err.message || err)}</p>
-      <p>Controleer of <strong>concerts.json</strong> in de hoofdmap staat en de site via een webserver of GitHub Pages wordt geopend.</p>
+    <div class="concert-card">
+      <div class="details">
+        <h3>Concerten konden niet worden geladen</h3>
+        <p>${escapeHtml(err.message || err)}</p>
+      </div>
     </div>
   `;
 }
+
+document.addEventListener("DOMContentLoaded", loadConcerts);
 
 // =========================================================
 // HULPFUNCTIES
@@ -118,28 +112,6 @@ function getSafeUrl(value) {
   }
 }
 
-function getConcertDate(concert) {
-  return new Date(concert.datetime);
-}
-
-function isPastConcert(concert, now = new Date()) {
-  return getConcertDate(concert) < now;
-}
-
-function isSameDay(d1, d2) {
-  return (
-    d1.getFullYear() === d2.getFullYear() &&
-    d1.getMonth() === d2.getMonth() &&
-    d1.getDate() === d2.getDate()
-  );
-}
-
-function daysBetweenCalendarDates(fromDate, toDate) {
-  const from = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
-  const to = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
-  return Math.floor((to - from) / 86400000);
-}
-
 function diffYMDDays(target, now) {
   let years = now.getFullYear() - target.getFullYear();
   let months = now.getMonth() - target.getMonth();
@@ -147,8 +119,8 @@ function diffYMDDays(target, now) {
 
   if (days < 0) {
     months--;
-    const previousMonthDays = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
-    days += previousMonthDays;
+    const prevMonthDays = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    days += prevMonthDays;
   }
 
   if (months < 0) {
@@ -159,16 +131,24 @@ function diffYMDDays(target, now) {
   return { years, months, days };
 }
 
+
+function daysBetweenCalendarDates(fromDate, toDate) {
+  const from = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+  const to = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+  return Math.floor((to - from) / 86400000);
+}
+
 function formatDate(datetime) {
   const date = new Date(datetime);
-  return date.toLocaleDateString("nl-NL", {
+  const options = {
     weekday: "long",
     day: "numeric",
     month: "long",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit"
-  }).replace(" om", " –");
+  };
+  return date.toLocaleDateString("nl-NL", options).replace(" om", " –");
 }
 
 function formatShortDate(datetime) {
@@ -179,17 +159,12 @@ function formatShortDate(datetime) {
   });
 }
 
-function formatMonthYear(key) {
-  const [year, month] = key.split("-").map(Number);
-  return new Date(year, month - 1, 1).toLocaleDateString("nl-NL", {
-    month: "long",
-    year: "numeric"
-  });
-}
-
-function formatConcertShort(concert) {
-  if (!concert) return "n.v.t.";
-  return `${escapeHtml(concert.artist)} · ${formatShortDate(concert.datetime)}`;
+function isSameDay(d1, d2) {
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
 }
 
 function getCityFromLocation(location) {
@@ -212,390 +187,101 @@ function haversineKm(a, b) {
   return Math.round(earthRadiusKm * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h)));
 }
 
-function getTopEntries(object, max = 10) {
+function formatMonthYear(key) {
+  const parts = key.split("-");
+  const year = Number(parts[0]);
+  const month = Number(parts[1]);
+  const date = new Date(year, month - 1, 1);
+  return date.toLocaleDateString("nl-NL", { month: "long", year: "numeric" });
+}
+
+function getTopEntries(object, max) {
   return Object.entries(object)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, max);
+    .slice(0, max || 10);
 }
 
-function getFilteredConcerts(sourceConcerts, type) {
-  const now = new Date();
-  const query = appState.search.trim().toLowerCase();
-
-  return sourceConcerts.filter(concert => {
-    const isPast = isPastConcert(concert, now);
-    const hasSetlist = Boolean(getSafeUrl(concert.setlistUrl));
-    const haystack = `${concert.artist} ${concert.location}`.toLowerCase();
-
-    if (query && !haystack.includes(query)) return false;
-    if (type === "upcoming" && isPast) return false;
-    if (type === "past" && !isPast) return false;
-    if (type === "setlists" && (!isPast || !hasSetlist)) return false;
-
-    return true;
-  });
-}
-
-function sortConcerts(sourceConcerts, type) {
-  const sorted = [...sourceConcerts];
-
-  if (appState.sort === "artist") {
-    return sorted.sort((a, b) => a.artist.localeCompare(b.artist) || getConcertDate(a) - getConcertDate(b));
-  }
-
-  if (appState.sort === "oldest") {
-    return sorted.sort((a, b) => getConcertDate(a) - getConcertDate(b));
-  }
-
-  if (appState.sort === "newest") {
-    return sorted.sort((a, b) => getConcertDate(b) - getConcertDate(a));
-  }
-
-  if (type === "upcoming") {
-    return sorted.sort((a, b) => getConcertDate(a) - getConcertDate(b));
-  }
-
-  return sorted.sort((a, b) => getConcertDate(b) - getConcertDate(a));
-}
-
-function getCounts() {
-  const now = new Date();
-  const upcoming = concerts.filter(concert => !isPastConcert(concert, now));
-  const past = concerts.filter(concert => isPastConcert(concert, now));
-  const setlists = past.filter(concert => Boolean(getSafeUrl(concert.setlistUrl)));
-  const artists = new Set(concerts.map(concert => concert.artist));
-
-  return {
-    total: concerts.length,
-    upcoming: upcoming.length,
-    past: past.length,
-    setlists: setlists.length,
-    artists: artists.size
-  };
-}
-
-function getNextConcert() {
-  const now = new Date();
-  return concerts
-    .filter(concert => !isPastConcert(concert, now))
-    .sort((a, b) => getConcertDate(a) - getConcertDate(b))[0] || null;
+function formatConcertShort(concert) {
+  if (!concert) return "n.v.t.";
+  return `${escapeHtml(concert.artist)}: ${formatShortDate(concert.datetime)}`;
 }
 
 // =========================================================
-// INTERACTIE
+// LAYOUT AANMAKEN / CONTROLEREN
 // =========================================================
 
-function setupControls() {
-  const searchInput = document.getElementById("concert-search");
-  const filterSelect = document.getElementById("concert-filter");
-  const sortSelect = document.getElementById("concert-sort");
-  const archiveToggle = document.querySelector(".archive-toggle");
-  const statsToggle = document.querySelector(".stats-toggle");
+function ensureLayout() {
+  const main = document.querySelector("main");
+  if (!main) return;
 
-  if (searchInput && searchInput.dataset.ready !== "true") {
-    searchInput.dataset.ready = "true";
-    searchInput.addEventListener("input", event => {
-      appState.search = event.target.value;
-      renderConcerts();
-    });
+  let upcomingList = document.getElementById("upcoming-list");
+  if (!upcomingList) {
+    const upcoming = document.getElementById("upcoming") || document.createElement("section");
+    upcoming.id = "upcoming";
+    upcomingList = document.createElement("div");
+    upcomingList.id = "upcoming-list";
+    upcoming.appendChild(upcomingList);
+    if (!upcoming.parentElement) main.appendChild(upcoming);
   }
 
-  if (filterSelect && filterSelect.dataset.ready !== "true") {
-    filterSelect.dataset.ready = "true";
-    filterSelect.addEventListener("change", event => {
-      appState.filter = event.target.value;
-      renderConcerts();
-    });
+  let actions = document.getElementById("overview-actions");
+  if (!actions) {
+    actions = document.createElement("section");
+    actions.id = "overview-actions";
+    actions.className = "overview-actions";
+    main.appendChild(actions);
   }
 
-  if (sortSelect && sortSelect.dataset.ready !== "true") {
-    sortSelect.dataset.ready = "true";
-    sortSelect.addEventListener("change", event => {
-      appState.sort = event.target.value;
-      renderConcerts();
-    });
+  let archiveToggle = document.querySelector(".archive-toggle");
+  if (!archiveToggle) {
+    archiveToggle = document.createElement("h2");
+    archiveToggle.className = "archive-toggle toggle-button";
+    actions.appendChild(archiveToggle);
   }
 
-  if (archiveToggle && archiveToggle.dataset.ready !== "true") {
-    archiveToggle.dataset.ready = "true";
-    archiveToggle.addEventListener("click", () => {
-      appState.archiveExpanded = !appState.archiveExpanded;
-      renderConcerts();
-    });
+  let statsToggle = document.querySelector(".stats-toggle");
+  if (!statsToggle) {
+    statsToggle = document.createElement("h2");
+    statsToggle.className = "stats-toggle toggle-button stats-button";
+    actions.appendChild(statsToggle);
   }
 
-  if (statsToggle && statsToggle.dataset.ready !== "true") {
-    statsToggle.dataset.ready = "true";
-    statsToggle.addEventListener("click", () => {
-      appState.statsExpanded = !appState.statsExpanded;
-      renderConcerts();
-    });
-  }
-}
+  if (!actions.contains(archiveToggle)) actions.appendChild(archiveToggle);
+  if (!actions.contains(statsToggle)) actions.appendChild(statsToggle);
 
-// =========================================================
-// HERO EN SECTIES
-// =========================================================
-
-function createHeroStat(label, value, sub) {
-  return `
-    <article class="hero-stat-card">
-      <span>${escapeHtml(label)}</span>
-      <strong>${escapeHtml(value)}</strong>
-      <small>${escapeHtml(sub)}</small>
-    </article>
-  `;
-}
-
-function renderHero() {
-  const heroStats = document.getElementById("hero-stats");
-  const nextHighlight = document.getElementById("next-highlight");
-  const counts = getCounts();
-  const nextConcert = getNextConcert();
-
-  if (heroStats) {
-    heroStats.innerHTML = `
-      ${createHeroStat("Totaal", String(counts.total), "concerten")}
-      ${createHeroStat("Gepland", String(counts.upcoming), "komende shows")}
-      ${createHeroStat("Setlists", String(counts.setlists), "gevonden links")}
-      ${createHeroStat("Artiesten", String(counts.artists), "uniek")}
-    `;
+  let archiveSection = document.getElementById("archive");
+  if (!archiveSection) {
+    archiveSection = document.createElement("section");
+    archiveSection.id = "archive";
+    main.appendChild(archiveSection);
   }
 
-  if (!nextHighlight) return;
+  let archiveList = document.getElementById("archive-list");
+  if (!archiveList) {
+    archiveList = document.createElement("div");
+    archiveList.id = "archive-list";
+    archiveSection.appendChild(archiveList);
+  }
+  archiveList.classList.add("collapsible-panel");
 
-  if (!nextConcert) {
-    nextHighlight.innerHTML = `
-      <div class="next-card empty-next-card">
-        <div>
-          <p class="section-kicker">Volgende show</p>
-          <h2>Geen komende concerten</h2>
-          <p>Er staan op dit moment geen toekomstige concerten in concerts.json.</p>
-        </div>
-      </div>
-    `;
-    return;
+  let statisticsSection = document.getElementById("statistics");
+  if (!statisticsSection) {
+    statisticsSection = document.createElement("section");
+    statisticsSection.id = "statistics";
+    main.appendChild(statisticsSection);
   }
 
-  nextHighlight.innerHTML = `
-    <div class="next-card concert-card" data-datetime="${escapeHtml(nextConcert.datetime)}">
-      <div class="next-copy">
-        <p class="section-kicker">Volgende show</p>
-        <h2>${escapeHtml(nextConcert.artist)}</h2>
-        <p>${escapeHtml(nextConcert.location)}</p>
-        <time datetime="${escapeHtml(nextConcert.datetime)}">${formatDate(nextConcert.datetime)}</time>
-      </div>
-      <div class="next-countdown">
-        <span>Countdown</span>
-        ${createUpcomingCountdownMarkup("featured")}
-      </div>
-    </div>
-  `;
-}
-
-function updateToggleState() {
-  const archiveList = document.getElementById("archive-list");
-  const statsList = document.getElementById("stats-list");
-  const archiveToggle = document.querySelector(".archive-toggle");
-  const statsToggle = document.querySelector(".stats-toggle");
-  const archiveArrow = document.querySelector(".archive-arrow");
-  const statsArrow = document.querySelector(".stats-arrow");
-  const counts = getCounts();
-
-  if (archiveList) archiveList.classList.toggle("expanded", appState.archiveExpanded);
-  if (statsList) statsList.classList.toggle("expanded", appState.statsExpanded);
-
-  if (archiveToggle) {
-    archiveToggle.setAttribute("aria-expanded", String(appState.archiveExpanded));
-    archiveToggle.querySelector("span:last-child").textContent = `Archief (${counts.past})`;
+  let statsList = document.getElementById("stats-list");
+  if (!statsList) {
+    statsList = document.createElement("div");
+    statsList.id = "stats-list";
+    statisticsSection.appendChild(statsList);
   }
-
-  if (statsToggle) {
-    statsToggle.setAttribute("aria-expanded", String(appState.statsExpanded));
-    statsToggle.querySelector("span:last-child").textContent = "Statistieken";
-  }
-
-  if (archiveArrow) archiveArrow.style.transform = appState.archiveExpanded ? "rotate(180deg)" : "rotate(0deg)";
-  if (statsArrow) statsArrow.style.transform = appState.statsExpanded ? "rotate(180deg)" : "rotate(0deg)";
+  statsList.classList.add("collapsible-panel");
 }
 
 // =========================================================
-// CONCERTKAARTEN
-// =========================================================
-
-function createSetlistButton(concert, isPast) {
-  const setlistUrl = isPast ? getSafeUrl(concert.setlistUrl) : "";
-
-  if (!setlistUrl) {
-    return isPast ? '<span class="setlist-placeholder" aria-hidden="true"></span>' : "";
-  }
-
-  return `
-    <a class="setlist-button" href="${escapeHtml(setlistUrl)}" target="_blank" rel="noopener noreferrer" title="Bekijk setlist op Setlist.fm" aria-label="Bekijk setlist van ${escapeHtml(concert.artist)} op Setlist.fm">
-      <img class="setlist-logo" src="assets/setlistfm-logo.png" alt="Setlist.fm" loading="lazy">
-    </a>
-  `;
-}
-
-function createUpcomingCountdownMarkup(variant = "compact") {
-  return `
-    <div class="retro-countdown retro-countdown-${escapeHtml(variant)}" aria-live="polite">
-      ${createRetroSegmentMarkup("days", "Dagen")}
-      ${createRetroSegmentMarkup("hours", "Uren")}
-      ${createRetroSegmentMarkup("minutes", "Minuten")}
-      ${createRetroSegmentMarkup("seconds", "Seconden")}
-    </div>
-  `;
-}
-
-function createRetroSegmentMarkup(unit, label) {
-  return `
-    <div class="retro-segment" data-unit="${escapeHtml(unit)}">
-      <div class="retro-digit-shell">
-        <div class="retro-digit-card">
-          <span class="retro-value">00</span>
-        </div>
-      </div>
-      <small>${escapeHtml(label)}</small>
-    </div>
-  `;
-}
-
-function createConcertCard(concert, isPast) {
-  const card = document.createElement("article");
-  const date = getConcertDate(concert);
-  const setlistButton = createSetlistButton(concert, isPast);
-  const sideMarkup = isPast
-    ? `${setlistButton}<div class="countdown archive-countdown"></div>`
-    : createUpcomingCountdownMarkup("compact");
-
-  card.className = `concert-card ${isPast ? "past" : "upcoming"}`;
-  card.dataset.datetime = concert.datetime;
-
-  card.innerHTML = `
-    <div class="date-badge" aria-hidden="true">
-      <span>${date.toLocaleDateString("nl-NL", { month: "short" })}</span>
-      <strong>${date.toLocaleDateString("nl-NL", { day: "2-digit" })}</strong>
-    </div>
-
-    <div class="concert-main">
-      <div class="details">
-        <h3>${escapeHtml(concert.artist)}</h3>
-        <p>${escapeHtml(concert.location)}</p>
-      </div>
-      <time class="date" datetime="${escapeHtml(concert.datetime)}">${formatDate(concert.datetime)}</time>
-    </div>
-
-    <div class="concert-side ${isPast ? "past-side" : "upcoming-side"}">
-      ${sideMarkup}
-    </div>
-  `;
-
-  return card;
-}
-
-function createEmptyState(title, text) {
-  return `
-    <div class="empty-state">
-      <h3>${escapeHtml(title)}</h3>
-      <p>${escapeHtml(text)}</p>
-    </div>
-  `;
-}
-
-function renderConcertList(container, list, isPast) {
-  container.innerHTML = "";
-
-  if (list.length === 0) {
-    container.innerHTML = createEmptyState(
-      "Geen concerten gevonden",
-      "Pas de zoekopdracht, filter of sortering aan om opnieuw te zoeken."
-    );
-    return;
-  }
-
-  list.forEach(concert => container.appendChild(createConcertCard(concert, isPast)));
-}
-
-// =========================================================
-// COUNTDOWNS
-// =========================================================
-
-function updateRetroCountdown(countdownEl, target, now) {
-  const diffMs = Math.max(0, target - now);
-  const totalSeconds = Math.floor(diffMs / 1000);
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  const values = { days, hours, minutes, seconds };
-
-  countdownEl.classList.toggle("today", isSameDay(target, now));
-  countdownEl.classList.toggle("is-live", diffMs === 0 && isSameDay(target, now));
-
-  countdownEl.querySelectorAll(".retro-segment").forEach(segment => {
-    const unit = segment.dataset.unit;
-    const valueEl = segment.querySelector(".retro-value");
-    if (!valueEl || !(unit in values)) return;
-
-    const rawValue = values[unit];
-    const formattedValue = unit === "days" ? String(rawValue) : String(rawValue).padStart(2, "0");
-    valueEl.textContent = formattedValue;
-  });
-}
-
-function updateTextCountdown(countdownEl, target, now) {
-  if (isSameDay(target, now)) {
-    countdownEl.innerHTML = `<strong>Vandaag</strong><small>⚡ live</small>`;
-    countdownEl.classList.remove("finished");
-    countdownEl.classList.add("today");
-    return;
-  }
-
-  const diffMs = target - now;
-
-  if (diffMs > 0) {
-    const days = Math.floor(diffMs / 86400000);
-    const hours = Math.floor((diffMs / 3600000) % 24);
-    const minutes = Math.floor((diffMs / 60000) % 60);
-
-    countdownEl.innerHTML = `<strong>${days}d ${hours}u ${minutes}m</strong><small>te gaan</small>`;
-    countdownEl.classList.remove("finished", "today");
-    return;
-  }
-
-  const daysAgo = daysBetweenCalendarDates(target, now);
-  const diff = diffYMDDays(target, now);
-  const ymd = `${diff.years} jaar, ${diff.months} maanden en ${diff.days} dagen`;
-
-  countdownEl.innerHTML = `<strong>${daysAgo} dagen geleden</strong><small>${ymd}</small>`;
-  countdownEl.classList.add("finished");
-  countdownEl.classList.remove("today");
-}
-
-function updateCountdowns() {
-  const now = new Date();
-
-  document.querySelectorAll(".concert-card").forEach(card => {
-    const target = new Date(card.dataset.datetime);
-
-    if (Number.isNaN(target.getTime())) return;
-
-    const retroCountdown = card.querySelector(".retro-countdown");
-    if (retroCountdown) {
-      updateRetroCountdown(retroCountdown, target, now);
-      return;
-    }
-
-    const countdownEl = card.querySelector(".countdown");
-    if (!countdownEl) return;
-
-    updateTextCountdown(countdownEl, target, now);
-  });
-}
-
-// =========================================================
-// STATISTIEKEN
+// STATISTIEKEN BEREKENEN
 // =========================================================
 
 function generateStats(past) {
@@ -603,13 +289,13 @@ function generateStats(past) {
   const locationStats = {};
   const weekdayStats = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 0: 0 };
 
-  past.forEach(concert => {
-    const date = getConcertDate(concert);
-    const weekday = date.getDay();
+  past.forEach(c => {
+    const d = new Date(c.datetime);
+    const wd = d.getDay();
 
-    artistStats[concert.artist] = (artistStats[concert.artist] || 0) + 1;
-    locationStats[concert.location] = (locationStats[concert.location] || 0) + 1;
-    weekdayStats[weekday]++;
+    artistStats[c.artist] = (artistStats[c.artist] || 0) + 1;
+    locationStats[c.location] = (locationStats[c.location] || 0) + 1;
+    weekdayStats[wd]++;
   });
 
   return {
@@ -622,15 +308,15 @@ function generateStats(past) {
 }
 
 function generateYearStats(past) {
-  const years = past.map(concert => getConcertDate(concert).getFullYear());
+  const years = past.map(c => new Date(c.datetime).getFullYear());
   const firstYear = years.length ? Math.min(...years) : new Date().getFullYear();
   const currentYear = new Date().getFullYear();
   const stats = {};
 
-  for (let year = firstYear; year <= currentYear; year++) stats[year] = 0;
+  for (let y = firstYear; y <= currentYear; y++) stats[y] = 0;
 
-  past.forEach(concert => {
-    const year = getConcertDate(concert).getFullYear();
+  past.forEach(c => {
+    const year = new Date(c.datetime).getFullYear();
     stats[year] = (stats[year] || 0) + 1;
   });
 
@@ -641,16 +327,16 @@ function generateMonthHeatmap(past) {
   const monthNames = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
   const monthStats = monthNames.map((name, index) => ({ name, count: 0, heat: 0, monthIndex: index }));
 
-  past.forEach(concert => {
-    const month = getConcertDate(concert).getMonth();
+  past.forEach(c => {
+    const month = new Date(c.datetime).getMonth();
     monthStats[month].count++;
   });
 
-  const max = Math.max(...monthStats.map(month => month.count), 1);
+  const max = Math.max(...monthStats.map(m => m.count), 1);
 
-  return monthStats.map(month => ({
-    ...month,
-    heat: month.count === 0 ? 0 : Math.max(1, Math.ceil((month.count / max) * 5))
+  return monthStats.map(m => ({
+    ...m,
+    heat: m.count === 0 ? 0 : Math.max(1, Math.ceil((m.count / max) * 5))
   }));
 }
 
@@ -664,8 +350,7 @@ function generateExtraStats(past) {
       uniqueLocations: 0,
       avgDaysBetween: 0,
       firstConcert: null,
-      lastConcert: null,
-      setlists: 0
+      lastConcert: null
     };
   }
 
@@ -673,26 +358,26 @@ function generateExtraStats(past) {
   const yearCounts = {};
   const artists = new Set();
   const locations = new Set();
-  const dates = past.map(concert => getConcertDate(concert)).sort((a, b) => a - b);
-  const chronological = [...past].sort((a, b) => getConcertDate(a) - getConcertDate(b));
+  const dates = past.map(c => new Date(c.datetime)).sort((a, b) => a - b);
+  const chronological = [...past].sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
 
-  past.forEach(concert => {
-    const date = getConcertDate(concert);
-    const ym = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  past.forEach(c => {
+    const d = new Date(c.datetime);
+    const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 
     monthCounts[ym] = (monthCounts[ym] || 0) + 1;
-    yearCounts[date.getFullYear()] = (yearCounts[date.getFullYear()] || 0) + 1;
-    artists.add(concert.artist);
-    locations.add(concert.location);
+    yearCounts[d.getFullYear()] = (yearCounts[d.getFullYear()] || 0) + 1;
+    artists.add(c.artist);
+    locations.add(c.location);
   });
+
+  const busiestMonthRaw = Object.entries(monthCounts).sort((a, b) => b[1] - a[1])[0];
+  const busiestYear = Object.entries(yearCounts).sort((a, b) => b[1] - a[1])[0];
 
   let totalDiff = 0;
   for (let i = 1; i < dates.length; i++) {
     totalDiff += (dates[i] - dates[i - 1]) / 86400000;
   }
-
-  const busiestMonthRaw = Object.entries(monthCounts).sort((a, b) => b[1] - a[1])[0];
-  const busiestYear = Object.entries(yearCounts).sort((a, b) => b[1] - a[1])[0];
 
   return {
     busiestMonth: [formatMonthYear(busiestMonthRaw[0]), busiestMonthRaw[1]],
@@ -702,13 +387,12 @@ function generateExtraStats(past) {
     uniqueLocations: locations.size,
     avgDaysBetween: dates.length > 1 ? Math.round(totalDiff / (dates.length - 1)) : 0,
     firstConcert: chronological[0],
-    lastConcert: chronological[chronological.length - 1],
-    setlists: past.filter(concert => Boolean(getSafeUrl(concert.setlistUrl))).length
+    lastConcert: chronological[chronological.length - 1]
   };
 }
 
 function generateStreakStats(past) {
-  const sorted = [...past].sort((a, b) => getConcertDate(a) - getConcertDate(b));
+  const sorted = [...past].sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
 
   if (sorted.length === 0) {
     return {
@@ -723,7 +407,7 @@ function generateStreakStats(past) {
     let left = 0;
 
     for (let right = 0; right < sorted.length; right++) {
-      while (getConcertDate(sorted[right]) - getConcertDate(sorted[left]) > daysWindow * 86400000) {
+      while (new Date(sorted[right].datetime) - new Date(sorted[left].datetime) > daysWindow * 86400000) {
         left++;
       }
 
@@ -738,8 +422,8 @@ function generateStreakStats(past) {
 
   let shortestGap = null;
   for (let i = 1; i < sorted.length; i++) {
-    const previous = getConcertDate(sorted[i - 1]);
-    const current = getConcertDate(sorted[i]);
+    const previous = new Date(sorted[i - 1].datetime);
+    const current = new Date(sorted[i].datetime);
     const days = Math.round((current - previous) / 86400000);
 
     if (!shortestGap || days < shortestGap.days) {
@@ -774,7 +458,7 @@ function generateDistanceStats(past) {
     };
   }
 
-  const totalDistance = concertsWithDistance.reduce((sum, concert) => sum + concert.distance, 0);
+  const totalDistance = concertsWithDistance.reduce((sum, c) => sum + c.distance, 0);
   const farthest = [...concertsWithDistance].sort((a, b) => b.distance - a.distance)[0];
 
   return {
@@ -786,13 +470,17 @@ function generateDistanceStats(past) {
   };
 }
 
+// =========================================================
+// HTML HELPERS VOOR STATISTIEKEN
+// =========================================================
+
 function createStatCard(label, value, sub) {
   return `
-    <article class="stat-card">
-      <span>${escapeHtml(label)}</span>
-      <strong>${value}</strong>
-      ${sub ? `<small>${sub}</small>` : ""}
-    </article>
+    <div class="stat-card">
+      <div class="label">${escapeHtml(label)}</div>
+      <div class="value">${value}</div>
+      ${sub ? `<div class="sub">${sub}</div>` : ""}
+    </div>
   `;
 }
 
@@ -804,7 +492,7 @@ function createBarChart(entries) {
     return `
       <div class="bar-row">
         <span>${escapeHtml(item.label)}</span>
-        <div class="bar-track" aria-hidden="true">
+        <div class="bar-track">
           <div class="bar-fill" style="width:${percentage}%"></div>
         </div>
         <strong>${item.value}</strong>
@@ -813,16 +501,11 @@ function createBarChart(entries) {
   }).join("");
 }
 
-function createMonthHeatmap(monthStats) {
+function createTopList(entries, limit) {
   return `
-    <div class="month-heatmap">
-      ${monthStats.map(month => `
-        <div class="month-cell heat-${month.heat}">
-          <span>${month.name}</span>
-          <strong>${month.count}</strong>
-        </div>
-      `).join("")}
-    </div>
+    <ol class="stats-list">
+      ${entries.slice(0, limit || 8).map(([name, count]) => `<li>${escapeHtml(name)}: <strong>${count}×</strong></li>`).join("")}
+    </ol>
   `;
 }
 
@@ -837,14 +520,14 @@ function createFullRankingList(entries, type) {
   return `
     <div class="ranking-bar-list ${type === "location" ? "location-ranking" : "artist-ranking"}">
       ${entries.map(([name, count], index) => {
-        const percentage = count === 0 ? 0 : Math.max(4, Math.round((count / max) * 100));
+        const percentage = count === 0 ? 0 : Math.max(3, Math.round((count / max) * 100));
         const share = total > 0 ? Math.round((count / total) * 100) : 0;
         const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`;
         return `
           <div class="ranking-bar-row top-${index + 1}">
             <span class="ranking-position">${medal}</span>
             <span class="ranking-name">${escapeHtml(name)}</span>
-            <div class="bar-track ranking-wide-track" aria-hidden="true">
+            <div class="bar-track ranking-wide-track">
               <div class="bar-fill ranking-wide-fill" style="width:${percentage}%"></div>
             </div>
             <strong class="ranking-count">${count}×</strong>
@@ -856,6 +539,23 @@ function createFullRankingList(entries, type) {
   `;
 }
 
+function createMonthHeatmap(monthStats) {
+  return `
+    <div class="month-heatmap">
+      ${monthStats.map(month => `
+        <div class="month-cell heat-${month.heat}">
+          ${month.name}
+          <strong>${month.count}</strong>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+// =========================================================
+// RENDER STATISTIEKEN
+// =========================================================
+
 function renderStatsBlock(past) {
   const { sortedArtists, sortedLocations, weekdayStats, weekdayNames, weekdayOrder } = generateStats(past);
   const yearStats = generateYearStats(past);
@@ -863,15 +563,22 @@ function renderStatsBlock(past) {
   const monthHeatmap = generateMonthHeatmap(past);
   const streakStats = generateStreakStats(past);
   const distanceStats = generateDistanceStats(past);
+
+  const container = document.createElement("div");
+  container.className = "stats-panel";
+
   const yearChartEntries = Object.entries(yearStats).map(([year, value]) => ({ label: year, value }));
-  const weekdayChartEntries = weekdayOrder.map(dayNumber => ({ label: weekdayNames[dayNumber], value: weekdayStats[dayNumber] }));
+  const weekdayChartEntries = weekdayOrder.map(dayNumber => ({
+    label: weekdayNames[dayNumber],
+    value: weekdayStats[dayNumber]
+  }));
 
   const farthestText = distanceStats.farthest
     ? `${escapeHtml(distanceStats.farthest.city)} (${distanceStats.farthest.distance} km)`
     : "n.v.t.";
 
   const farthestSub = distanceStats.farthest
-    ? `${escapeHtml(distanceStats.farthest.artist)} · ${escapeHtml(distanceStats.farthest.location)}`
+    ? `${escapeHtml(distanceStats.farthest.artist)}: ${escapeHtml(distanceStats.farthest.location)}`
     : "";
 
   const shortestGapText = streakStats.shortestGap ? `${streakStats.shortestGap.days} dagen` : "n.v.t.";
@@ -879,82 +586,74 @@ function renderStatsBlock(past) {
     ? `${escapeHtml(streakStats.shortestGap.first.artist)} → ${escapeHtml(streakStats.shortestGap.second.artist)}`
     : "";
 
-  const container = document.createElement("div");
-  container.className = "stats-panel";
-
   container.innerHTML = `
-    <div class="stats-title-row">
-      <div>
-        <p class="section-kicker">Inzicht</p>
-        <h2>Statistieken</h2>
-      </div>
-      <span class="pill">${extra.totalConcerts} bezocht</span>
-    </div>
+    <h2>📊 Statistieken</h2>
 
     <div class="stats-grid">
       ${createStatCard("Totaal bezocht", `${extra.totalConcerts}`, "concerten")}
-      ${createStatCard("Setlists gevonden", `${extra.setlists}`, "links in archief")}
       ${createStatCard("Unieke artiesten", `${extra.uniqueArtists}`, "verschillende artiesten")}
       ${createStatCard("Unieke locaties", `${extra.uniqueLocations}`, "verschillende locaties")}
-      ${createStatCard("Gem. tijd ertussen", `${extra.avgDaysBetween}`, "dagen")}
-      ${createStatCard("Drukste maand", `${escapeHtml(extra.busiestMonth[0])}`, `${extra.busiestMonth[1]} concerten`)}
-      ${createStatCard("Drukste jaar", `${escapeHtml(extra.busiestYear[0])}`, `${extra.busiestYear[1]} concerten`)}
+      ${createStatCard("Gem. tijd ertussen", `${extra.avgDaysBetween}`, "dagen tussen concerten")}
+      ${createStatCard("Drukste maand", `${extra.busiestMonth[0]}`, `${extra.busiestMonth[1]} concerten`)}
+      ${createStatCard("Drukste jaar", `${extra.busiestYear[0]}`, `${extra.busiestYear[1]} concerten`)}
       ${createStatCard("Verste locatie", farthestText, farthestSub)}
+      ${createStatCard("Gem. afstand", `${distanceStats.averageDistance} km`, "hemelsbreed berekend")}
     </div>
 
     <div class="stats-box heatmap-wide-box">
-      <div class="stats-box-header">
-        <div>
-          <h3>Concert heatmap per maand</h3>
-          <p>Donkerder betekent meer concerten in die maand.</p>
-        </div>
-      </div>
+      <h3>🔥 Concert heatmap per maand</h3>
       ${createMonthHeatmap(monthHeatmap)}
+      <div class="chart-note">Donkerder betekent meer concerten in die maand.</div>
     </div>
 
     <div class="stats-sections main-stats-sections">
       <div class="stats-box">
-        <h3>Timeline per jaar</h3>
+        <h3>📈 Timeline per jaar</h3>
         ${createBarChart(yearChartEntries)}
       </div>
 
       <div class="stats-box">
-        <h3>Concerten per weekdag</h3>
+        <h3>📅 Concerten per weekdag</h3>
         ${createBarChart(weekdayChartEntries)}
       </div>
     </div>
 
     <div class="stats-sections extra-stats-sections">
       <div class="stats-box">
-        <h3>Concert streaks</h3>
+        <h3>⚡ Concert streaks</h3>
         <ul class="stats-list">
           <li>Meeste in 14 dagen: <strong>${streakStats.maxIn14Days.count}×</strong><br><small>${formatConcertShort(streakStats.maxIn14Days.start)} t/m ${formatConcertShort(streakStats.maxIn14Days.end)}</small></li>
           <li>Meeste in 30 dagen: <strong>${streakStats.maxIn30Days.count}×</strong><br><small>${formatConcertShort(streakStats.maxIn30Days.start)} t/m ${formatConcertShort(streakStats.maxIn30Days.end)}</small></li>
-          <li>Kortste pauze: <strong>${shortestGapText}</strong><br><small>${shortestGapSub}</small></li>
+          <li>Kortste pauze tussen 2 concerten: <strong>${shortestGapText}</strong><br><small>${shortestGapSub}</small></li>
         </ul>
       </div>
 
       <div class="stats-box">
-        <h3>Afstanden</h3>
+        <h3>🚗 Afstanden</h3>
         <ul class="stats-list">
           <li>Verste locatie: <strong>${farthestText}</strong></li>
           <li>Gemiddelde enkele reis: <strong>${distanceStats.averageDistance} km</strong></li>
           <li>Geschatte totaalafstand retour: <strong>${distanceStats.totalDistance.toLocaleString("nl-NL")} km</strong></li>
-          <li>Bekende plaats: <strong>${distanceStats.knownCount}/${past.length}</strong></li>
+          <li>Concerten met bekende plaats: <strong>${distanceStats.knownCount}/${past.length}</strong></li>
         </ul>
-        <p class="chart-note">Afstanden zijn hemelsbreed en berekend op basis van de plaatsnaam achter het streepje in de locatie.</p>
+        <div class="chart-note">Afstanden zijn hemelsbreed en berekend op basis van de plaatsnaam achter het streepje in de locatie.</div>
       </div>
 
       <div class="stats-box">
-        <h3>Eerste & laatste</h3>
+        <h3>🏁 Eerste & laatste bezochte concert</h3>
         <div class="first-last-block">
-          <div>
-            <div class="first-last-label">Eerste bezochte concert</div>
-            <p>${formatConcertShort(extra.firstConcert)}</p>
+          <div class="first-last-group">
+            <div class="first-last-label">Eerste:</div>
+            <ul class="stats-list nested-stats-list">
+              <li><strong>${formatConcertShort(extra.firstConcert)}</strong></li>
+            </ul>
           </div>
-          <div>
-            <div class="first-last-label">Laatste bezochte concert</div>
-            <p>${formatConcertShort(extra.lastConcert)}</p>
+
+          <div class="first-last-group">
+            <div class="first-last-label">Laatste:</div>
+            <ul class="stats-list nested-stats-list">
+              <li><strong>${formatConcertShort(extra.lastConcert)}</strong></li>
+            </ul>
           </div>
         </div>
       </div>
@@ -964,7 +663,7 @@ function renderStatsBlock(past) {
       <div class="stats-box full-ranking-box">
         <div class="stats-box-header">
           <div>
-            <h3>Alle artiesten</h3>
+            <h3>🎤 Alle artiesten</h3>
             <p>Gesorteerd op aantal bezochte concerten.</p>
           </div>
           <span class="pill">${sortedArtists.length} artiesten</span>
@@ -975,7 +674,7 @@ function renderStatsBlock(past) {
       <div class="stats-box full-ranking-box">
         <div class="stats-box-header">
           <div>
-            <h3>Alle locaties</h3>
+            <h3>📍 Alle locaties</h3>
             <p>Gesorteerd op aantal bezoeken per locatie.</p>
           </div>
           <span class="pill">${sortedLocations.length} locaties</span>
@@ -989,54 +688,226 @@ function renderStatsBlock(past) {
 }
 
 // =========================================================
+// CONCERTKAARTEN
+// =========================================================
+
+function createConcertCard(concert, isPast) {
+  const card = document.createElement("div");
+  card.classList.add("concert-card", isPast ? "past" : "upcoming");
+  card.dataset.datetime = concert.datetime;
+
+  const setlistUrl = isPast ? getSafeUrl(concert.setlistUrl) : "";
+  const setlistButton = setlistUrl
+    ? `
+      <a class="setlist-button" href="${escapeHtml(setlistUrl)}" target="_blank" rel="noopener noreferrer" title="Bekijk setlist op Setlist.fm" aria-label="Bekijk setlist van ${escapeHtml(concert.artist)} op Setlist.fm">
+        <img class="setlist-logo" src="assets/setlistfm-logo.png" alt="Setlist.fm" loading="lazy">
+      </a>
+    `
+    : "";
+
+  card.innerHTML = `
+    <div class="info">
+      <div class="concert-main">
+        <div class="details">
+          <h3>${escapeHtml(concert.artist)}</h3>
+          <p>${escapeHtml(concert.location)}</p>
+        </div>
+        <div class="date">${formatDate(concert.datetime)}</div>
+      </div>
+      <div class="concert-side">
+        <div class="setlist-slot">${setlistButton}</div>
+        <div class="countdown ${isPast ? "countdown-history" : "flip-countdown"}"></div>
+      </div>
+    </div>
+  `;
+
+  return card;
+}
+
+// =========================================================
+// COUNTDOWNS
+// =========================================================
+
+const COUNTDOWN_UNITS = [
+  { key: "days", label: "dagen" },
+  { key: "hours", label: "uren" },
+  { key: "minutes", label: "min" },
+  { key: "seconds", label: "sec" }
+];
+
+function getCountdownParts(diffMs) {
+  return {
+    days: Math.floor(diffMs / 86400000),
+    hours: Math.floor((diffMs / 3600000) % 24),
+    minutes: Math.floor((diffMs / 60000) % 60),
+    seconds: Math.floor((diffMs / 1000) % 60)
+  };
+}
+
+function formatCountdownValue(unit, value) {
+  const minimumLength = unit === "days" && value > 99 ? String(value).length : 2;
+  return String(Math.max(0, value)).padStart(minimumLength, "0");
+}
+
+function createFlipCountdownMarkup(parts) {
+  return `
+    <div class="flip-countdown-inner" aria-label="Countdown tot concert">
+      ${COUNTDOWN_UNITS.map(unit => `
+        <div class="flip-unit" data-unit="${unit.key}">
+          <div class="flip-card" data-value="${formatCountdownValue(unit.key, parts[unit.key])}">
+            <span class="flip-value">${formatCountdownValue(unit.key, parts[unit.key])}</span>
+          </div>
+          <div class="flip-label">${unit.label}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function ensureFlipCountdown(countdownEl, parts) {
+  countdownEl.classList.remove("countdown-history", "countdown-live", "finished");
+  countdownEl.classList.add("flip-countdown");
+
+  if (countdownEl.dataset.flipReady !== "true") {
+    countdownEl.innerHTML = createFlipCountdownMarkup(parts);
+    countdownEl.dataset.flipReady = "true";
+  }
+}
+
+function updateFlipCountdown(countdownEl, parts) {
+  ensureFlipCountdown(countdownEl, parts);
+
+  COUNTDOWN_UNITS.forEach(unit => {
+    const value = formatCountdownValue(unit.key, parts[unit.key]);
+    const unitEl = countdownEl.querySelector(`.flip-unit[data-unit="${unit.key}"]`);
+    if (!unitEl) return;
+
+    const card = unitEl.querySelector(".flip-card");
+    const valueEl = unitEl.querySelector(".flip-value");
+    if (!card || !valueEl || card.dataset.value === value) return;
+
+    card.dataset.value = value;
+    valueEl.textContent = value;
+    card.classList.remove("is-flipping");
+    void card.offsetWidth;
+    card.classList.add("is-flipping");
+  });
+}
+
+function renderPastCountdown(countdownEl, target, now) {
+  const daysAgo = daysBetweenCalendarDates(target, now);
+  const diff = diffYMDDays(target, now);
+  const ymd = `${diff.years} jaar, ${diff.months} maanden en ${diff.days} dagen geleden`;
+
+  countdownEl.dataset.flipReady = "false";
+  countdownEl.classList.remove("flip-countdown", "countdown-live");
+  countdownEl.classList.add("countdown-history", "finished");
+  countdownEl.innerHTML = `
+    ${daysAgo} dagen geleden 🎶
+    <br>
+    <small>${ymd}</small>
+  `;
+}
+
+function renderStartedCountdown(countdownEl) {
+  countdownEl.dataset.flipReady = "false";
+  countdownEl.classList.remove("flip-countdown", "countdown-history", "finished");
+  countdownEl.classList.add("countdown-live");
+  countdownEl.textContent = "Concert gestart 🎸";
+}
+
+function updateCountdowns() {
+  const now = new Date();
+
+  document.querySelectorAll(".concert-card").forEach(card => {
+    const target = new Date(card.dataset.datetime);
+    const countdownEl = card.querySelector(".countdown");
+    if (!countdownEl || Number.isNaN(target.getTime())) return;
+
+    const diffMs = target - now;
+
+    if (card.classList.contains("past")) {
+      renderPastCountdown(countdownEl, target, now);
+      return;
+    }
+
+    if (diffMs > 0) {
+      updateFlipCountdown(countdownEl, getCountdownParts(diffMs));
+      return;
+    }
+
+    renderStartedCountdown(countdownEl);
+  });
+}
+
+// =========================================================
+// TOGGLES
+// =========================================================
+
+function setupToggle(toggleSelector, panelSelector, arrowSelector) {
+  const toggle = document.querySelector(toggleSelector);
+  const panel = document.querySelector(panelSelector);
+  const arrow = document.querySelector(arrowSelector);
+
+  if (!toggle || !panel || !arrow) return;
+  if (toggle.dataset.toggleReady === "true") return;
+
+  toggle.dataset.toggleReady = "true";
+
+  toggle.addEventListener("click", () => {
+    panel.classList.toggle("expanded");
+    arrow.style.transform = panel.classList.contains("expanded") ? "rotate(180deg)" : "rotate(0deg)";
+  });
+}
+
+// =========================================================
 // RENDER ALLES
 // =========================================================
 
 function renderConcerts() {
+  ensureLayout();
+
+  const now = new Date();
   const upcomingList = document.getElementById("upcoming-list");
   const archiveList = document.getElementById("archive-list");
   const statsList = document.getElementById("stats-list");
-  const archiveSection = document.getElementById("archive");
-  const upcomingSection = document.getElementById("upcoming");
-  const statisticsSection = document.getElementById("statistics");
+  const archiveToggle = document.querySelector(".archive-toggle");
+  const statsToggle = document.querySelector(".stats-toggle");
 
-  if (!upcomingList || !archiveList || !statsList) return;
-
-  const visibleUpcoming = sortConcerts(getFilteredConcerts(concerts, "upcoming"), "upcoming");
-  const visibleArchive = sortConcerts(getFilteredConcerts(concerts, appState.filter === "setlists" ? "setlists" : "past"), "past");
-  const shouldShowUpcoming = ["all", "upcoming"].includes(appState.filter);
-  const shouldShowArchive = ["all", "past", "setlists"].includes(appState.filter);
-
-  renderHero();
-
-  if (upcomingSection) upcomingSection.hidden = !shouldShowUpcoming;
-  if (archiveSection) archiveSection.hidden = !shouldShowArchive;
-  if (statisticsSection) statisticsSection.hidden = false;
-
-  if (shouldShowUpcoming) {
-    renderConcertList(upcomingList, visibleUpcoming, false);
+  if (!upcomingList || !archiveList || !statsList || !archiveToggle || !statsToggle) {
+    console.error("Niet alle benodigde HTML-elementen zijn gevonden.");
+    return;
   }
 
-  if (shouldShowArchive) {
-    renderConcertList(archiveList, visibleArchive, true);
-  }
-
-  const pastForStats = concerts
-    .filter(concert => isPastConcert(concert))
-    .sort((a, b) => getConcertDate(b) - getConcertDate(a));
-
+  upcomingList.innerHTML = "";
+  archiveList.innerHTML = "";
   statsList.innerHTML = "";
-  statsList.appendChild(renderStatsBlock(pastForStats));
 
-  updateToggleState();
+  const upcoming = concerts
+    .filter(c => new Date(c.datetime) >= now)
+    .sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+
+  const past = concerts
+    .filter(c => new Date(c.datetime) < now)
+    .sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+
+  archiveToggle.innerHTML = `<span class="archive-arrow arrow">▼</span> Archief (${past.length})`;
+  statsToggle.innerHTML = `<span class="stats-arrow arrow">▼</span> Statistieken`;
+
+  if (upcoming.length === 0) {
+    upcomingList.innerHTML = `<p class="empty-message">Er staan momenteel geen komende concerten in de planning.</p>`;
+  } else {
+    upcoming.forEach(c => upcomingList.appendChild(createConcertCard(c, false)));
+  }
+
+  past.forEach(c => archiveList.appendChild(createConcertCard(c, true)));
+  statsList.appendChild(renderStatsBlock(past));
+
   updateCountdowns();
 
   if (countdownTimer) clearInterval(countdownTimer);
   countdownTimer = setInterval(updateCountdowns, 1000);
+
+  setupToggle(".archive-toggle", "#archive-list", ".archive-arrow");
+  setupToggle(".stats-toggle", "#stats-list", ".stats-arrow");
 }
-
-// =========================================================
-// START
-// =========================================================
-
-document.addEventListener("DOMContentLoaded", loadConcerts);
