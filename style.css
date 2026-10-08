@@ -42,6 +42,7 @@ h2 {
 }
 
 .concert-card {
+  position: relative;
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid rgba(229, 231, 235, 0.9);
   border-radius: 16px;
@@ -54,6 +55,10 @@ h2 {
 
 .concert-card:hover {
   transform: translateY(-3px);
+}
+
+.concert-card:focus-within {
+  z-index: 5;
 }
 
 .info {
@@ -128,6 +133,82 @@ h2 {
 
 .countdown.finished {
   color: #a39f9d;
+}
+
+.calendar-action {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.calendar-action[open] {
+  z-index: 6;
+}
+
+.calendar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #172711;
+  color: #ffffff;
+  cursor: pointer;
+  list-style: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.calendar-button::-webkit-details-marker {
+  display: none;
+}
+
+.calendar-button:hover,
+.calendar-action[open] .calendar-button {
+  background: #305128;
+  transform: translateY(-1px);
+}
+
+.calendar-button:focus-visible {
+  outline: 3px solid #65a30d;
+  outline-offset: 3px;
+}
+
+.calendar-options {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: max-content;
+  min-width: 220px;
+  max-width: min(300px, 88vw);
+  padding: 6px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+}
+
+.calendar-options a,
+.calendar-options button {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #111827;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.calendar-options a:hover,
+.calendar-options button:hover,
+.calendar-options a:focus-visible,
+.calendar-options button:focus-visible {
+  background: #f0f5ec;
 }
 
 .overview-actions {

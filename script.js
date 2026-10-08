@@ -207,6 +207,153 @@ function formatConcertShort(concert) {
 }
 
 // =========================================================
+// TOEVOEGEN AAN OUTLOOK-AGENDA
+// =========================================================
+
+// De concerttijden in concerts.json zijn lokale Nederlandse/Duitse tijden.
+// Zet ze expliciet om vanuit Europe/Amsterdam, zodat de Outlook-link en het
+// .ics-bestand ook bij een andere browser-tijdzone de juiste tijd gebruiken.
+const CONCERT_TIME_ZONE = "Europe/Amsterdam";
+const DEFAULT_CONCERT_DURATION_HOURS = 3;
+
+function getConcertStartDate(datetime) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(datetime);
+  if (!match) return null;
+
+  const [, year, month, day, hour, minute, second = "00"] = match;
+  const desiredLocalAsUtc = Date.UTC(+year, +month - 1, +day, +hour, +minute, +second);
+  let utcTimestamp = desiredLocalAsUtc;
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone: CONCERT_TIME_ZONE,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hourCycle: "h23"
+  });
+
+  // Het tijdzoneverschil kan door zomer-/wintertijd afwijken.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const parts = Object.fromEntries(
+      formatter.formatToParts(new Date(utcTimestamp))
+        .filter(part => part.type !== "literal")
+        .map(part => [part.type, Number(part.value)])
+    );
+    const actualLocalAsUtc = Date.UTC(
+      parts.year, parts.month - 1, parts.day,
+      parts.hour, parts.minute, parts.second
+    );
+    const difference = desiredLocalAsUtc - actualLocalAsUtc;
+    utcTimestamp += difference;
+    if (difference === 0) break;
+  }
+
+  const startDate = new Date(utcTimestamp);
+  return Number.isNaN(startDate.getTime()) ? null : startDate;
+}
+
+function getConcertCalendarDates(concert) {
+  const start = getConcertStartDate(concert.datetime);
+  if (!start) return null;
+
+  // concerts.json bevat geen eindtijden; 3 uur is daarom een aanpasbare schatting.
+  const end = new Date(start.getTime() + DEFAULT_CONCERT_DURATION_HOURS * 3600000);
+  return { start, end };
+}
+
+function createOutlookCalendarUrl(concert) {
+  const dates = getConcertCalendarDates(concert);
+  if (!dates) return "";
+
+  const url = new URL("https://outlook.office.com/calendar/action/compose");
+  url.searchParams.set("rru", "addevent");
+  url.searchParams.set("allday", "false");
+  url.searchParams.set("subject", `Concert: ${concert.artist}`);
+  url.searchParams.set("startdt", dates.start.toISOString());
+  url.searchParams.set("enddt", dates.end.toISOString());
+  url.searchParams.set("location", concert.location);
+  url.searchParams.set("body", "De eindtijd is geschat op 3 uur na aanvang. Controleer en pas deze indien nodig aan.");
+  return url.toString();
+}
+
+function escapeIcsText(value) {
+  return String(value)
+    .replace(/\\/g, "\\\\")
+    .replace(/\r\n|\r|\n/g, "\\n")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,");
+}
+
+function formatIcsUtc(date) {
+  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+}
+
+// RFC 5545: maximaal 75 UTF-8 bytes per fysieke regel, vervolgregels
+// beginnen met één spatie.
+function foldIcsLine(line) {
+  const encoder = new TextEncoder();
+  let output = "";
+  let lineBytes = 0;
+  for (const character of line) {
+    const characterBytes = encoder.encode(character).length;
+    if (lineBytes + characterBytes > 75) {
+      output += "\r\n ";
+      lineBytes = 1;
+    }
+    output += character;
+    lineBytes += characterBytes;
+  }
+  return output;
+}
+
+function createConcertIcs(concert) {
+  const dates = getConcertCalendarDates(concert);
+  if (!dates) return "";
+
+  const identifier = `${concert.artist}|${concert.location}|${concert.datetime}`;
+  let uidHash = 2166136261;
+  for (const character of identifier) {
+    uidHash = Math.imul(uidHash ^ character.charCodeAt(0), 16777619);
+  }
+
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//JVConcertCounter//Mijn Concerten//NL",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:${(uidHash >>> 0).toString(16)}-${concert.datetime.replace(/\D/g, "")}@jvconcertcounter`,
+    `DTSTAMP:${formatIcsUtc(new Date())}`,
+    `DTSTART:${formatIcsUtc(dates.start)}`,
+    `DTEND:${formatIcsUtc(dates.end)}`,
+    `SUMMARY:${escapeIcsText(`Concert: ${concert.artist}`)}`,
+    `LOCATION:${escapeIcsText(concert.location)}`,
+    `DESCRIPTION:${escapeIcsText("De eindtijd is geschat op 3 uur na aanvang. Controleer en pas deze indien nodig aan.")}`,
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ];
+
+  return lines.map(foldIcsLine).join("\r\n") + "\r\n";
+}
+
+function downloadConcertIcs(concert) {
+  const ics = createConcertIcs(concert);
+  if (!ics) return;
+
+  const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+  const downloadUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const safeArtist = concert.artist.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  link.href = downloadUrl;
+  link.download = `concert-${safeArtist || "evenement"}-${concert.datetime.slice(0, 10)}.ics`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+}
+
+// =========================================================
 // LAYOUT AANMAKEN / CONTROLEREN
 // =========================================================
 
@@ -705,6 +852,25 @@ function createConcertCard(concert, isPast) {
     `
     : "";
 
+  const outlookUrl = !isPast ? createOutlookCalendarUrl(concert) : "";
+  const calendarButton = outlookUrl
+    ? `
+      <details class="calendar-action">
+        <summary class="calendar-button" title="Toevoegen aan agenda" aria-label="Voeg ${escapeHtml(concert.artist)} toe aan je agenda">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+            <path d="M7 3v4M17 3v4M3 10h18"></path>
+            <path d="M12 13v6M9 16h6"></path>
+          </svg>
+        </summary>
+        <div class="calendar-options">
+          <a href="${escapeHtml(outlookUrl)}" target="_blank" rel="noopener noreferrer">Openen in Outlook (web)</a>
+          <button class="download-ics" type="button">Download .ics voor Outlook</button>
+        </div>
+      </details>
+    `
+    : "";
+
   card.innerHTML = `
     <div class="info">
       <div class="concert-main">
@@ -717,11 +883,21 @@ function createConcertCard(concert, isPast) {
       <div class="concert-side">
         ${setlistButton}
         <div class="countdown"></div>
+        ${calendarButton}
       </div>
     </div>
   `;
 
   if (isPast) card.classList.add("past");
+
+  const downloadButton = card.querySelector(".download-ics");
+  if (downloadButton) {
+    downloadButton.addEventListener("click", () => {
+      downloadConcertIcs(concert);
+      downloadButton.closest("details").open = false;
+    });
+  }
+
   return card;
 }
 
@@ -822,6 +998,8 @@ function renderConcerts() {
     .filter(c => new Date(c.datetime) < now)
     .sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
 
+  const upcomingHeading = document.querySelector("#upcoming > h1");
+  if (upcomingHeading) upcomingHeading.textContent = `Komende concerten (${upcoming.length})`;
   archiveToggle.innerHTML = `<span class="archive-arrow arrow">▼</span> Archief (${past.length})`;
   statsToggle.innerHTML = `<span class="stats-arrow arrow">▼</span> Statistieken`;
 
